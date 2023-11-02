@@ -71,6 +71,18 @@ impl<'db> IdbTransaction<'db> {
         let tx = self.inner.object_store(name)?;
         Ok(IdbObjectStore::from_tx(tx, self))
     }
+
+    /// Returns an [`IdbObjectStore`] object representing an object store that is part of the scope
+    /// of this transaction.
+    pub fn store(&'db self) -> Result<IdbObjectStore<'db>, DomException> {
+        let names = self.inner.object_store_names();
+        if names.length() != 1 {
+            panic!("Transaction does not have exactly one store name.");
+        }
+        let name = names.get(0).unwrap();
+        let tx = self.inner.object_store(&name)?;
+        Ok(IdbObjectStore::from_tx(tx, self))
+    }
 }
 
 impl Drop for IdbTransaction<'_> {
