@@ -6,6 +6,7 @@ use web_sys::{DomException, IdbTransactionMode};
 
 pub(crate) use idb_version_change_event::IdbVersionChangeCallback;
 pub use idb_version_change_event::IdbVersionChangeEvent;
+use crate::as_slice::AsStrSlice;
 
 use crate::dom_string_iterator::DomStringIterator;
 use crate::idb_object_store::{IdbObjectStore, IdbObjectStoreParameters};
@@ -17,7 +18,7 @@ mod idb_version_change_event;
 
 /// Wrapper for an [`IndexedDB`](web_sys::IdbDatabase)
 #[derive(Debug, new)]
-#[new(vis(pub(crate)))]
+#[new(vis(pub (crate)))]
 pub struct IdbDatabase {
     inner: web_sys::IdbDatabase,
 
@@ -45,7 +46,7 @@ impl IdbDatabase {
 
     /// List the names of the object stores within this database
     #[inline]
-    pub fn object_store_names(&self) -> impl Iterator<Item = String> + 'static {
+    pub fn object_store_names(&self) -> impl Iterator<Item=String> + 'static {
         DomStringIterator::from(self.inner.object_store_names())
     }
 
@@ -89,8 +90,8 @@ impl IdbDatabase {
 
     /// Set the callback to execute when the versionchange event is fired
     pub fn set_on_version_change<F>(&mut self, callback: Option<F>)
-    where
-        F: Fn(&IdbVersionChangeEvent) -> Result<(), JsValue> + 'static,
+        where
+            F: Fn(&IdbVersionChangeEvent) -> Result<(), JsValue> + 'static,
     {
         self.on_version_change = if let Some(callback) = callback {
             let cb = IdbVersionChangeEvent::wrap_callback(callback);
@@ -101,6 +102,16 @@ impl IdbDatabase {
             self.inner.set_onversionchange(None);
             None
         };
+    }
+
+    /// Start a transaction on the given object store
+    pub fn transaction(&self, name_or_names: impl AsStrSlice, mode: IdbTransactionMode) -> Result<IdbTransaction, DomException> {
+        let names: &[&str] = name_or_names.as_slice();
+        if names.len() == 1 {
+            self.transaction_on_one_with_mode(names[0], mode)
+        } else {
+            self.transaction_on_multi_with_mode(names, mode)
+        }
     }
 
     /// Start a transaction on the given object store
@@ -161,6 +172,13 @@ impl IdbDatabase {
     /// Create an object store with the given name
     pub fn create_object_store(&self, name: &str) -> Result<IdbObjectStore, DomException> {
         let inner = self.inner.create_object_store(name)?;
+        Ok(IdbObjectStore::from_db(inner, self))
+    }
+
+    /// Create an object store with the given name
+    pub fn create_object_store2(&self, name: &str, params: impl Into<IdbObjectStoreParameters>) -> Result<IdbObjectStore, DomException> {
+        let params = params.into();
+        let inner = self.inner.create_object_store_with_optional_parameters(name, params.as_js_value())?;
         Ok(IdbObjectStore::from_db(inner, self))
     }
 
@@ -256,7 +274,7 @@ pub mod test {
         req.await.expect("Future failed")
     }
 
-    fn open_db_req(req: Result<OpenDbRequest, DomException>) -> impl Future<Output = IdbDatabase> {
+    fn open_db_req(req: Result<OpenDbRequest, DomException>) -> impl Future<Output=IdbDatabase> {
         open_db(req.expect("Base open failed"))
     }
 

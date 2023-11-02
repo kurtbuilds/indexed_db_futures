@@ -170,8 +170,21 @@ impl<'a> IdbObjectStore<'a> {
     pub fn create_index(
         &self,
         name: &str,
-        key_path: &IdbKeyPath,
+        key_path: &IdbKeyPath
     ) -> Result<IdbIndex, DomException> {
+        let base = self
+            .inner
+            .create_index_with_str_sequence(name, key_path.as_js_value());
+        self.create_idx_common(base)
+    }
+
+    /// Create an index at the given key path
+    pub fn create_index2(
+        &self,
+        name: &str,
+        key_path: impl Into<IdbKeyPath>,
+    ) -> Result<IdbIndex, DomException> {
+        let key_path = key_path.into();
         let base = self
             .inner
             .create_index_with_str_sequence(name, key_path.as_js_value());

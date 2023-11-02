@@ -49,3 +49,32 @@ impl From<web_sys::IdbObjectStoreParameters> for IdbObjectStoreParameters {
         Self(raw)
     }
 }
+
+
+#[cfg(feature = "json")]
+mod extras {
+    use serde_json::Value;
+    use super::*;
+
+    impl Into<IdbObjectStoreParameters> for Option<Value> {
+        fn into(self) -> IdbObjectStoreParameters {
+            match self {
+                Some(val) => val.into(),
+                None => IdbObjectStoreParameters::default(),
+            }
+        }
+    }
+
+    impl Into<IdbObjectStoreParameters> for Value {
+        fn into(self) -> IdbObjectStoreParameters {
+            let mut params = IdbObjectStoreParameters::default();
+            if let Some(val) = self.get("auto_increment") {
+                params.auto_increment(val.as_bool().unwrap());
+            }
+            if let Some(val) = self.get("key_path") {
+                params.key_path(Some(&IdbKeyPath::str(val.as_str().unwrap())));
+            }
+            params
+        }
+    }
+}

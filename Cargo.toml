@@ -36,6 +36,7 @@ indices = [
     "web-sys/IdbIndex",
     "web-sys/IdbIndexParameters"
 ]
+json = ["serde_json"]
 nightly = []
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -51,9 +52,10 @@ cfg-if = "1.0.0"
 delegate-display = "2"
 fancy_constructor = "1.2.2"
 js-sys = "0.3.64"
-uuid = {version = "1.5.0", features = ["v4", "wasm-bindgen", "js"]}
+uuid = { version = "1.5.0", features = ["v4", "wasm-bindgen", "js"] }
 wasm-bindgen = "0.2.87"
 wasm-bindgen-futures = "0.4.37"
+serde_json = { version = "1.0.108", optional = true }
 
 [dependencies.web-sys]
 version = "0.3.64"

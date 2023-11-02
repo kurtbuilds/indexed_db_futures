@@ -321,3 +321,4 @@ pub use idb_index::*;
 #[cfg(feature = "cursors")]
 pub mod idb_cursor;
 mod idb_key_path;
+mod as_slice;
